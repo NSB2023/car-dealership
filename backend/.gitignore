@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.venv
+venv/
+db.sqlite3
+media/
+staticfiles/
+firebase-credentials.json
+*.log
+.DS_Store

@@ -194,7 +194,7 @@ function Navbar() {
           {["Inventory", "Dealerships", "Finance", "About"].map((item) => (
             <a
               key={item}
-              href={`/${item.toLowerCase()}`}
+              href={item === "About" ? "#about" : `/${item.toLowerCase()}`}
               className="text-white/60 hover:text-white text-sm tracking-wide transition-colors duration-200"
             >
               {item}
@@ -273,7 +273,7 @@ function Navbar() {
       {menuOpen && (
         <div className="md:hidden bg-[#0a0a0a] border-t border-white/5 px-6 py-4 flex flex-col gap-4">
           {["Inventory", "Dealerships", "Finance", "About"].map((item) => (
-            <a key={item} href={`/${item.toLowerCase()}`} className="text-white/70 text-sm py-1">
+            <a key={item} href={item === "About" ? "#about" : `/${item.toLowerCase()}`} className="text-white/70 text-sm py-1">
               {item}
             </a>
           ))}
@@ -702,7 +702,7 @@ function WhyUs() {
               inventory with a transparent, customer-first experience.
             </p>
             <a
-              href="/about"
+              href="#about"
               className="text-[#C9A84C] text-sm tracking-wide font-medium flex items-center gap-2 hover:gap-3 transition-all duration-200"
             >
               Learn our story
@@ -726,6 +726,115 @@ function WhyUs() {
                 <p className="text-white/40 text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AboutSection() {
+  const PRINCIPLES = [
+    {
+      value: "01",
+      title: "Curated, never crowded",
+      desc: "Every vehicle is selected for condition, provenance, specification, and long-term desirability.",
+    },
+    {
+      value: "02",
+      title: "Advisory over sales pressure",
+      desc: "Our consultants help compare options clearly, from ownership costs to delivery timing.",
+    },
+    {
+      value: "03",
+      title: "Details handled quietly",
+      desc: "Inspection, financing, registration, protection plans, and delivery move through one coordinated process.",
+    },
+  ]
+
+  return (
+    <section id="about" className="relative overflow-hidden bg-[#080808] px-6 py-24 border-t border-white/5 scroll-mt-24">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#C9A84C]/30 to-transparent" />
+
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-14 lg:gap-20 items-center">
+          <div className="relative">
+            <div className="aspect-[4/5] overflow-hidden rounded-sm bg-[#111111] border border-white/10">
+              <img
+                src="https://images.unsplash.com/photo-1563720223185-11003d516935?w=1100&q=85"
+                alt="AutoLux showroom"
+                className="h-full w-full object-cover opacity-80"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-transparent to-transparent" />
+            </div>
+
+            <div className="absolute left-5 right-5 bottom-5 border border-white/10 bg-[#080808]/85 backdrop-blur-md rounded-sm p-5">
+              <div className="flex items-center justify-between gap-5">
+                <div>
+                  <p className="text-[#C9A84C] text-xs tracking-[0.3em] uppercase mb-2">Since 2009</p>
+                  <p className="text-white text-sm leading-relaxed">
+                    Built for buyers who value precision, discretion, and exceptional machines.
+                  </p>
+                </div>
+                <div className="h-16 w-px bg-white/10 flex-shrink-0" />
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-white tracking-tight">18</p>
+                  <p className="text-white/35 text-xs uppercase tracking-widest mt-1">Locations</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px w-8 bg-[#C9A84C]" />
+              <span className="text-[#C9A84C] text-xs tracking-[0.3em] uppercase">About AutoLux</span>
+            </div>
+
+            <h2
+              className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Luxury buying,
+              <br />
+              <span className="text-[#C9A84C] italic">refined end to end</span>
+            </h2>
+
+            <p className="text-white/45 leading-relaxed mb-8 max-w-2xl">
+              AutoLux was created around a simple standard: a premium vehicle deserves a premium process.
+              We combine carefully sourced inventory with expert guidance, transparent documentation,
+              and delivery that feels composed from first conversation to final handoff.
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 mb-10">
+              <div className="border-l border-[#C9A84C]/40 pl-4">
+                <p className="text-2xl font-bold text-white">150</p>
+                <p className="text-white/35 text-xs uppercase tracking-widest mt-1">Point inspection</p>
+              </div>
+              <div className="border-l border-[#C9A84C]/40 pl-4">
+                <p className="text-2xl font-bold text-white">24h</p>
+                <p className="text-white/35 text-xs uppercase tracking-widest mt-1">Purchase support</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {PRINCIPLES.map((item) => (
+                <div
+                  key={item.title}
+                  className="group grid grid-cols-[3rem_1fr] gap-4 border-t border-white/10 pt-4"
+                >
+                  <span className="text-[#C9A84C]/70 text-xs tracking-[0.25em] font-medium pt-1">
+                    {item.value}
+                  </span>
+                  <div>
+                    <h3 className="text-white font-semibold text-sm mb-1 group-hover:text-[#C9A84C] transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="text-white/35 text-sm leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -841,6 +950,7 @@ export default function HomePage() {
       <SearchBar />
       <FeaturedCars />
       <WhyUs />
+      <AboutSection />
       <CTABanner />
       <Footer />
     </div>
@@ -1656,4 +1766,3 @@ export default function HomePage() {
 //     </div>
 //   )
 // }
-

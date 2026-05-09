@@ -6,6 +6,8 @@ import { auth } from "./firebase/config"
 
 import HomePage from "./pages/HomePage"
 import LoginPage from "./pages/LoginPage"
+import ContactPage from "./pages/ContactPage"
+import DealershipsPage from "./pages/DealershipsPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +39,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/dealerships" element={<DealershipsPage />} />
       <Route
         path="/login"
         element={user ? <Navigate to="/" replace /> : <LoginPage />}

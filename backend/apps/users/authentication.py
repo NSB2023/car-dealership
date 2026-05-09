@@ -5,6 +5,22 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 import os
 
+
+class FirebaseUser:
+    """Small user-like wrapper so DRF permissions treat Firebase users as authenticated."""
+
+    is_authenticated = True
+
+    def __init__(self, token):
+        self.token = token
+        self.uid = token["uid"]
+        self.email = token.get("email", "")
+        self.display_name = token.get("name", "")
+
+    def __str__(self):
+        return self.email or self.uid
+
+
 # Initialize Firebase Admin SDK once
 if not firebase_admin._apps:
     cred_path = settings.FIREBASE_CREDENTIALS
@@ -16,7 +32,7 @@ if not firebase_admin._apps:
 class FirebaseAuthentication(BaseAuthentication):
     """
     Validates Firebase ID tokens sent in the Authorization: Bearer <token> header.
-    Sets request.user to AnonymousUser and request.firebase_user to the decoded token.
+    Sets request.user to a FirebaseUser and request.firebase_user to the decoded token.
     """
 
     def authenticate(self, request):
@@ -33,5 +49,4 @@ class FirebaseAuthentication(BaseAuthentication):
         # Attach decoded token to request for use in views
         request.firebase_user = decoded_token
 
-        # Return (user, token) — using a simple dict as the "user"
-        return (decoded_token, None)
+        return (FirebaseUser(decoded_token), decoded_token)

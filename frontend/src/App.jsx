@@ -8,6 +8,7 @@ import HomePage from "./pages/HomePage"
 import LoginPage from "./pages/LoginPage"
 import ContactPage from "./pages/ContactPage"
 import DealershipsPage from "./pages/DealershipsPage"
+import InventoryPage from "./pages/InventoryPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +40,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/inventory" element={<InventoryPage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/dealerships" element={<DealershipsPage />} />
       <Route

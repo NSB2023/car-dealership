@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react"
 import { onAuthStateChanged, signOut } from "firebase/auth"
 import { auth } from "../firebase/config"
+import { Calculator, CalendarDays, Car, MapPin, Sparkles, X } from "lucide-react"
 
 // ─── Utility ────────────────────────────────────────────────────────────────
 const cn = (...classes) => classes.filter(Boolean).join(" ")
@@ -100,6 +101,31 @@ const MAKES = ["All Makes", "BMW", "Mercedes-Benz", "Porsche", "Audi", "Lexus", 
 const MODELS = ["All Models", "Sedan", "SUV", "Coupe", "Convertible", "Truck", "Van"]
 const YEARS = ["Any Year", "2024", "2023", "2022", "2021", "2020", "2019 & older"]
 
+const formatCurrency = (value) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0))
+
+const titleCase = (value) =>
+  String(value || "")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+
+const getCarDescription = (car) => {
+  const descriptions = {
+    1: "A precision-built executive sedan with immense pace, a tailored cabin, and a composed grand touring character.",
+    2: "A high-performance luxury SUV with AMG power, hybrid assistance, and comfort that feels effortless over distance.",
+    3: "A certified performance SUV with Porsche handling, generous practicality, and a quietly confident road presence.",
+    4: "A dramatic sportback that combines quattro grip, grand touring refinement, and everyday usability.",
+    5: "A sculptural luxury coupe with naturally aspirated character, elegant materials, and relaxed long-distance manners.",
+    6: "A technology-forward electric flagship with instant response, quiet cruising, and premium daily usability.",
+  }
+
+  return descriptions[car.id] || "A curated AutoLux selection with verified details, premium presentation, and concierge support."
+}
+
 
 
 // ─── COUNTER COMPONENT ─────────────────────────────────────────────────────
@@ -144,7 +170,7 @@ function Counter({ target, suffix = "", duration = 2000 }) {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function Navbar() {
+function Navbar({ onOpenFinance }) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [user, setUser] = useState(null)
@@ -192,13 +218,24 @@ function Navbar() {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
           {["Inventory", "Dealerships", "Finance", "About"].map((item) => (
-            <a
-              key={item}
-              href={item === "About" ? "#about" : `/${item.toLowerCase()}`}
-              className="text-white/60 hover:text-white text-sm tracking-wide transition-colors duration-200"
-            >
-              {item}
-            </a>
+            item === "Finance" ? (
+              <button
+                key={item}
+                type="button"
+                onClick={onOpenFinance}
+                className="text-white/60 hover:text-white text-sm tracking-wide transition-colors duration-200"
+              >
+                {item}
+              </button>
+            ) : (
+              <a
+                key={item}
+                href={item === "About" ? "#about" : `/${item.toLowerCase()}`}
+                className="text-white/60 hover:text-white text-sm tracking-wide transition-colors duration-200"
+              >
+                {item}
+              </a>
+            )
           ))}
         </div>
 
@@ -273,9 +310,15 @@ function Navbar() {
       {menuOpen && (
         <div className="md:hidden bg-[#0a0a0a] border-t border-white/5 px-6 py-4 flex flex-col gap-4">
           {["Inventory", "Dealerships", "Finance", "About"].map((item) => (
-            <a key={item} href={item === "About" ? "#about" : `/${item.toLowerCase()}`} className="text-white/70 text-sm py-1">
-              {item}
-            </a>
+            item === "Finance" ? (
+              <button key={item} type="button" onClick={onOpenFinance} className="text-white/70 text-sm py-1 text-left">
+                {item}
+              </button>
+            ) : (
+              <a key={item} href={item === "About" ? "#about" : `/${item.toLowerCase()}`} className="text-white/70 text-sm py-1">
+                {item}
+              </a>
+            )
           ))}
           {user ? (
             <button onClick={handleSignOut} className="text-red-400 text-sm py-1 text-left">
@@ -293,7 +336,7 @@ function Navbar() {
   )
 }
 
-function HeroSection() {
+function HeroSection({ onOpenFinance }) {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
@@ -372,12 +415,13 @@ function HeroSection() {
             >
               Browse inventory
             </a>
-            <a
-              href="/finance"
+            <button
+              type="button"
+              onClick={onOpenFinance}
               className="border border-white/20 hover:border-white/50 text-white/80 hover:text-white font-medium px-8 py-4 rounded-sm tracking-wide transition-all duration-200 text-sm"
             >
               Get financing
-            </a>
+            </button>
           </div>
 
           {/* Stats row */}
@@ -486,14 +530,15 @@ const BADGE_STYLES = {
   green: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
 }
 
-function CarCard({ car, index }) {
+function CarCard({ car, index, onOpen }) {
   const [imgLoaded, setImgLoaded] = useState(false)
   const [hovered, setHovered] = useState(false)
 
   return (
-    <a
-      href={`/cars/${car.id}`}
-      className="group block bg-[#111111] border border-white/5 rounded-sm overflow-hidden hover:border-[#C9A84C]/30 transition-all duration-300"
+    <button
+      type="button"
+      onClick={() => onOpen(car)}
+      className="group block w-full text-left bg-[#111111] border border-white/5 rounded-sm overflow-hidden hover:border-[#C9A84C]/30 transition-all duration-300"
       style={{ animationDelay: `${index * 80}ms` }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -561,12 +606,193 @@ function CarCard({ car, index }) {
           </div>
         </div>
       </div>
-    </a>
+    </button>
+  )
+}
+
+function HomeCarPreviewModal({ car, onClose }) {
+  useEffect(() => {
+    if (!car) return undefined
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onClose()
+    }
+
+    document.body.style.overflow = "hidden"
+    window.addEventListener("keydown", onKeyDown)
+
+    return () => {
+      document.body.style.overflow = ""
+      window.removeEventListener("keydown", onKeyDown)
+    }
+  }, [car, onClose])
+
+  if (!car) return null
+
+  const MagnifiedHomeImage = () => {
+    const [lens, setLens] = useState({ active: false, x: 50, y: 50 })
+    const zoom = 420
+
+    const handleMove = (event) => {
+      const rect = event.currentTarget.getBoundingClientRect()
+      const x = ((event.clientX - rect.left) / rect.width) * 100
+      const y = ((event.clientY - rect.top) / rect.height) * 100
+
+      setLens({
+        active: true,
+        x: Math.min(100, Math.max(0, x)),
+        y: Math.min(100, Math.max(0, y)),
+      })
+    }
+
+    return (
+      <div
+        className="absolute inset-0 flex items-center justify-center bg-[#151515] cursor-none"
+        onMouseMove={handleMove}
+        onMouseEnter={handleMove}
+        onMouseLeave={() => setLens((current) => ({ ...current, active: false }))}
+      >
+        <img
+          src={car.image}
+          alt={`${car.year} ${car.make} ${car.model}`}
+          className="h-full w-full object-contain opacity-95"
+        />
+
+        <div className="pointer-events-none absolute left-5 top-5 border border-white/10 bg-black/45 backdrop-blur-md rounded-sm px-3 py-2 text-[11px] uppercase tracking-[0.24em] text-white/45">
+          Hover to inspect
+        </div>
+
+        <div
+          className={cn(
+            "pointer-events-none absolute hidden md:block h-24 w-24 rounded-sm border border-[#C9A84C]/65 bg-[#C9A84C]/10 shadow-[0_0_0_9999px_rgba(0,0,0,0.04)] transition-opacity duration-150",
+            lens.active ? "opacity-100" : "opacity-0"
+          )}
+          style={{
+            left: `${lens.x}%`,
+            top: `${lens.y}%`,
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+
+        <div
+          className={cn(
+            "pointer-events-none absolute right-5 top-5 hidden h-48 w-48 overflow-hidden rounded-sm border border-[#C9A84C]/45 bg-[#101010] bg-no-repeat shadow-2xl ring-1 ring-black/60 md:block transition-all duration-150",
+            lens.active ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"
+          )}
+          style={{
+            backgroundImage: `url(${car.image})`,
+            backgroundSize: `${zoom}% ${zoom}%`,
+            backgroundPosition: `${lens.x}% ${lens.y}%`,
+          }}
+        >
+          <div className="absolute inset-x-0 bottom-0 bg-black/55 backdrop-blur-sm px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-[#C9A84C]">
+            Detail view
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6">
+      <button
+        type="button"
+        aria-label="Close vehicle preview"
+        onClick={onClose}
+        className="absolute inset-0 bg-black/55 backdrop-blur-md"
+      />
+
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="home-car-preview-title"
+        className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-white/15 bg-[#0b0b0b]/78 backdrop-blur-xl rounded-sm shadow-2xl"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-4 top-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-sm border border-white/10 bg-black/35 text-white/60 hover:text-white hover:border-[#C9A84C]/50 transition-colors"
+        >
+          <X className="w-4 h-4" strokeWidth={1.7} />
+        </button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="relative min-h-[320px] lg:min-h-[600px] bg-[#151515]">
+            <MagnifiedHomeImage />
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#080808] via-[#080808]/10 to-transparent" />
+            <div className="absolute left-5 bottom-5 flex flex-wrap gap-2 pointer-events-none">
+              <span className={cn("text-xs px-3 py-1.5 rounded-sm border font-medium tracking-wide", BADGE_STYLES[car.badgeColor])}>
+                {car.badge}
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-sm border border-white/10 bg-black/50 text-white/70 backdrop-blur-sm">
+                <Sparkles className="w-3 h-3" strokeWidth={1.7} />
+                Handpicked
+              </span>
+            </div>
+          </div>
+
+          <div className="p-6 md:p-8 lg:p-10">
+            <p className="text-[#C9A84C] text-xs tracking-[0.32em] uppercase mb-4">{car.make}</p>
+            <h2
+              id="home-car-preview-title"
+              className="text-4xl md:text-5xl font-bold leading-tight text-white"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              {car.year} {car.model}
+            </h2>
+            <p className="mt-4 text-[#C9A84C] text-3xl font-bold">{formatCurrency(car.price)}</p>
+            <p className="mt-5 text-white/48 leading-relaxed">{getCarDescription(car)}</p>
+
+            <div className="grid grid-cols-2 gap-3 mt-7">
+              {[
+                ["Mileage", car.mileage ? `${car.mileage.toLocaleString()} mi` : "Delivery"],
+                ["Fuel", titleCase(car.fuel)],
+                ["Transmission", titleCase(car.transmission)],
+                ["Status", car.badge],
+              ].map(([label, value]) => (
+                <div key={label} className="border border-white/10 bg-white/[0.035] rounded-sm p-4">
+                  <p className="text-white/35 text-xs uppercase tracking-[0.22em] mb-2">{label}</p>
+                  <p className="text-white font-semibold">{value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <div className="flex items-start gap-3 text-white/45 text-sm leading-relaxed">
+                <MapPin className="w-4 h-4 mt-0.5 text-[#C9A84C] flex-shrink-0" strokeWidth={1.5} />
+                <span>
+                  Available through the AutoLux network. A specialist can prepare availability,
+                  financing, and viewing details before you arrive.
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 mt-7">
+                <a
+                  href="/contact"
+                  className="inline-flex items-center justify-center gap-2 bg-[#C9A84C] hover:bg-[#D4B86A] text-black font-semibold px-5 py-3.5 rounded-sm text-sm transition-colors"
+                >
+                  <CalendarDays className="w-4 h-4" strokeWidth={1.7} />
+                  Schedule viewing
+                </a>
+                <a
+                  href="/inventory"
+                  className="inline-flex items-center justify-center border border-white/15 hover:border-white/40 text-white/65 hover:text-white px-5 py-3.5 rounded-sm text-sm transition-colors"
+                >
+                  Browse full inventory
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   )
 }
 
 function FeaturedCars() {
   const [filter, setFilter] = useState("All")
+  const [selectedCar, setSelectedCar] = useState(null)
   const filters = ["All", "New", "Certified", "Electric"]
 
   const filtered = filter === "All"
@@ -617,7 +843,7 @@ function FeaturedCars() {
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((car, i) => (
-            <CarCard key={car.id} car={car} index={i} />
+            <CarCard key={car.id} car={car} index={i} onOpen={setSelectedCar} />
           ))}
         </div>
 
@@ -634,6 +860,7 @@ function FeaturedCars() {
           </a>
         </div>
       </div>
+      <HomeCarPreviewModal car={selectedCar} onClose={() => setSelectedCar(null)} />
     </section>
   )
 }
@@ -842,7 +1069,228 @@ function AboutSection() {
   )
 }
 
-function CTABanner() {
+function FinanceModal({ open, onClose }) {
+  const [vehiclePrice, setVehiclePrice] = useState(98000)
+  const [downPayment, setDownPayment] = useState(15000)
+  const [tradeValue, setTradeValue] = useState(18000)
+  const [term, setTerm] = useState(60)
+  const [rate, setRate] = useState(6.4)
+  const [mileage, setMileage] = useState(42000)
+  const [condition, setCondition] = useState("excellent")
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onClose()
+    }
+
+    document.body.style.overflow = "hidden"
+    window.addEventListener("keydown", onKeyDown)
+
+    return () => {
+      document.body.style.overflow = ""
+      window.removeEventListener("keydown", onKeyDown)
+    }
+  }, [open, onClose])
+
+  if (!open) return null
+
+  const principal = Math.max(Number(vehiclePrice) - Number(downPayment) - Number(tradeValue), 0)
+  const monthlyRate = Number(rate) / 100 / 12
+  const monthlyPayment = principal === 0
+    ? 0
+    : monthlyRate === 0
+      ? principal / Number(term)
+      : principal * (monthlyRate * (1 + monthlyRate) ** Number(term)) / ((1 + monthlyRate) ** Number(term) - 1)
+  const conditionMultiplier = {
+    excellent: 1,
+    good: 0.92,
+    fair: 0.82,
+  }[condition]
+  const mileageAdjustment = Math.max(0.66, 1 - Number(mileage) / 260000)
+  const instantOffer = Math.round(Number(tradeValue) * conditionMultiplier * mileageAdjustment)
+  const totalInterest = Math.max(monthlyPayment * Number(term) - principal, 0)
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6">
+      <button
+        type="button"
+        aria-label="Close finance calculator"
+        onClick={onClose}
+        className="absolute inset-0 bg-black/55 backdrop-blur-md"
+      />
+
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="finance-title"
+        className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-white/15 bg-[#0b0b0b]/78 backdrop-blur-xl rounded-sm shadow-2xl"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-4 top-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-sm border border-white/10 bg-black/35 text-white/60 hover:text-white hover:border-[#C9A84C]/50 transition-colors"
+        >
+          <X className="w-4 h-4" strokeWidth={1.7} />
+        </button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="relative min-h-[340px] bg-[#111111] p-8 md:p-10 flex flex-col justify-between overflow-hidden">
+            <div className="absolute inset-0">
+              <img
+                src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1100&q=85"
+                alt="Premium finance desk"
+                className="h-full w-full object-cover opacity-20"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-[#080808]/80 to-[#080808]/45" />
+            </div>
+
+            <div className="relative">
+              <div className="inline-flex items-center gap-2 text-[#C9A84C] text-xs tracking-[0.3em] uppercase mb-5">
+                <Calculator className="w-4 h-4" strokeWidth={1.6} />
+                Finance studio
+              </div>
+              <h2
+                id="finance-title"
+                className="text-4xl md:text-5xl font-bold leading-tight text-white"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                Estimate your
+                <br />
+                <span className="text-[#C9A84C] italic">monthly path</span>
+              </h2>
+              <p className="mt-5 text-white/45 leading-relaxed">
+                Adjust the numbers and watch the offer update instantly. This is an estimate,
+                built for planning before a specialist prepares lender-ready terms.
+              </p>
+            </div>
+
+            <div className="relative grid grid-cols-2 gap-3 mt-8">
+              <div className="border border-white/10 bg-black/30 rounded-sm p-4">
+                <p className="text-white/35 text-xs uppercase tracking-[0.22em] mb-2">Payment</p>
+                <p className="text-[#C9A84C] text-3xl font-bold">{formatCurrency(monthlyPayment)}</p>
+                <p className="text-white/30 text-xs mt-1">per month</p>
+              </div>
+              <div className="border border-white/10 bg-black/30 rounded-sm p-4">
+                <p className="text-white/35 text-xs uppercase tracking-[0.22em] mb-2">Trade offer</p>
+                <p className="text-white text-3xl font-bold">{formatCurrency(instantOffer)}</p>
+                <p className="text-white/30 text-xs mt-1">instant estimate</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 md:p-8 lg:p-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                ["Vehicle price", vehiclePrice, setVehiclePrice, 1000],
+                ["Down payment", downPayment, setDownPayment, 500],
+                ["Trade-in value", tradeValue, setTradeValue, 500],
+                ["Trade mileage", mileage, setMileage, 1000],
+              ].map(([label, value, setter, step]) => (
+                <label key={label} className="block">
+                  <span className="block text-white/35 text-xs uppercase tracking-[0.2em] mb-2">{label}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step={step}
+                    value={value}
+                    onChange={(event) => setter(Number(event.target.value))}
+                    className="w-full bg-white/[0.04] border border-white/10 rounded-sm px-3 py-3 text-sm text-white outline-none focus:border-[#C9A84C]/70 transition-colors"
+                  />
+                </label>
+              ))}
+
+              <label className="block">
+                <span className="block text-white/35 text-xs uppercase tracking-[0.2em] mb-2">Term</span>
+                <select
+                  value={term}
+                  onChange={(event) => setTerm(Number(event.target.value))}
+                  className="w-full bg-white/[0.04] border border-white/10 rounded-sm px-3 py-3 text-sm text-white outline-none focus:border-[#C9A84C]/70 transition-colors"
+                >
+                  {[36, 48, 60, 72, 84].map((item) => (
+                    <option key={item} value={item} className="bg-[#111111]">{item} months</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="block text-white/35 text-xs uppercase tracking-[0.2em] mb-2">APR</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={rate}
+                  onChange={(event) => setRate(Number(event.target.value))}
+                  className="w-full bg-white/[0.04] border border-white/10 rounded-sm px-3 py-3 text-sm text-white outline-none focus:border-[#C9A84C]/70 transition-colors"
+                />
+              </label>
+
+              <label className="block sm:col-span-2">
+                <span className="block text-white/35 text-xs uppercase tracking-[0.2em] mb-2">Trade condition</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    ["excellent", "Excellent"],
+                    ["good", "Good"],
+                    ["fair", "Fair"],
+                  ].map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setCondition(value)}
+                      className={cn(
+                        "px-3 py-3 rounded-sm border text-sm transition-colors",
+                        condition === value
+                          ? "bg-[#C9A84C] border-[#C9A84C] text-black font-semibold"
+                          : "border-white/10 bg-white/[0.04] text-white/55 hover:text-white"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-7 pt-6 border-t border-white/10">
+              <div>
+                <p className="text-white/35 text-xs uppercase tracking-[0.22em] mb-2">Amount financed</p>
+                <p className="text-white font-semibold">{formatCurrency(principal)}</p>
+              </div>
+              <div>
+                <p className="text-white/35 text-xs uppercase tracking-[0.22em] mb-2">Interest est.</p>
+                <p className="text-white font-semibold">{formatCurrency(totalInterest)}</p>
+              </div>
+              <div>
+                <p className="text-white/35 text-xs uppercase tracking-[0.22em] mb-2">Equity credit</p>
+                <p className="text-white font-semibold">{formatCurrency(Number(downPayment) + instantOffer)}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-8">
+              <a
+                href="/contact"
+                className="inline-flex items-center justify-center gap-2 bg-[#C9A84C] hover:bg-[#D4B86A] text-black font-semibold px-5 py-3.5 rounded-sm text-sm transition-colors"
+              >
+                Request exact terms
+              </a>
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center justify-center border border-white/15 hover:border-white/40 text-white/65 hover:text-white px-5 py-3.5 rounded-sm text-sm transition-colors"
+              >
+                Continue browsing
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function CTABanner({ onOpenFinance }) {
   return (
     <section className="relative py-24 px-6 overflow-hidden bg-[#080808]">
       {/* Background */}
@@ -876,18 +1324,20 @@ function CTABanner() {
           No obligation, no pressure.
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
-          <a
-            href="/sell"
+          <button
+            type="button"
+            onClick={onOpenFinance}
             className="bg-[#C9A84C] hover:bg-[#D4B86A] text-black font-semibold px-8 py-4 rounded-sm text-sm tracking-wide transition-all duration-200"
           >
             Get instant offer
-          </a>
-          <a
-            href="/trade-in"
+          </button>
+          <button
+            type="button"
+            onClick={onOpenFinance}
             className="border border-white/20 hover:border-white/40 text-white/70 hover:text-white font-medium px-8 py-4 rounded-sm text-sm tracking-wide transition-all duration-200"
           >
             Trade-in value
-          </a>
+          </button>
         </div>
       </div>
     </section>
@@ -938,6 +1388,8 @@ function Footer() {
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function HomePage() {
+  const [financeOpen, setFinanceOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-[#080808]">
       {/* Playfair Display font */}
@@ -945,14 +1397,15 @@ export default function HomePage() {
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
       />
-      <Navbar />
-      <HeroSection />
+      <Navbar onOpenFinance={() => setFinanceOpen(true)} />
+      <HeroSection onOpenFinance={() => setFinanceOpen(true)} />
       <SearchBar />
       <FeaturedCars />
       <WhyUs />
       <AboutSection />
-      <CTABanner />
+      <CTABanner onOpenFinance={() => setFinanceOpen(true)} />
       <Footer />
+      <FinanceModal open={financeOpen} onClose={() => setFinanceOpen(false)} />
     </div>
   )
 }

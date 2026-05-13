@@ -9,6 +9,7 @@ import LoginPage from "./pages/LoginPage"
 import ContactPage from "./pages/ContactPage"
 import DealershipsPage from "./pages/DealershipsPage"
 import InventoryPage from "./pages/InventoryPage"
+import ConciergeChat from "./components/ConciergeChat"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,6 +57,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AppRoutes />
+        <ConciergeChat />
       </BrowserRouter>
     </QueryClientProvider>
   )

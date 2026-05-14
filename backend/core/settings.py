@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "apps.dealerships",
     "apps.reviews",
     "apps.users",
+    "apps.concierge",
 ]
 
 MIDDLEWARE = [
@@ -133,3 +134,9 @@ SPECTACULAR_SETTINGS = {
 
 # Firebase Admin
 FIREBASE_CREDENTIALS = os.getenv("FIREBASE_CREDENTIALS_PATH", "firebase-credentials.json")
+
+# Local AI concierge
+AI_PROVIDER = os.getenv("AI_PROVIDER", "ollama")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3.5:2b")
+OLLAMA_TIMEOUT_SECONDS = int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "30"))

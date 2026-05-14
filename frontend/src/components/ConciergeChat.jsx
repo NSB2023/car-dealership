@@ -8,6 +8,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react"
+import { sendConciergeMessage } from "../api/concierge"
 import { getCars } from "../api/inventory"
 
 const cn = (...classes) => classes.filter(Boolean).join(" ")
@@ -309,6 +310,7 @@ export default function ConciergeChat() {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
   const [cars, setCars] = useState(FALLBACK_CARS)
+  const [isThinking, setIsThinking] = useState(false)
   const [showLeadForm, setShowLeadForm] = useState(false)
   const [messages, setMessages] = useState([
     {
@@ -345,6 +347,14 @@ export default function ConciergeChat() {
 
   const respond = (text) => {
     const lower = text.toLowerCase()
+    const trimmed = lower.trim()
+
+    if (["hi", "hello", "hey", "how are you?", "hi how are you?", "how are you"].includes(trimmed)) {
+      return {
+        text: "I am doing well, thank you. I can help you compare vehicles, estimate payments, value a trade, or arrange a private viewing.",
+        actions: SUGGESTIONS.map((item) => ({ label: item.label, prompt: item.value })),
+      }
+    }
 
     if (lower.includes("book") || lower.includes("appointment") || lower.includes("viewing") || lower.includes("visit")) {
       setShowLeadForm(true)
@@ -364,16 +374,42 @@ export default function ConciergeChat() {
     return buildInventoryReply(text, cars)
   }
 
-  const sendMessage = (value = input) => {
+  const sendMessage = async (value = input) => {
     const text = value.trim()
-    if (!text) return
+    if (!text || isThinking) return
 
     setInput("")
-    setMessages((current) => [
-      ...current,
-      { id: Date.now(), role: "user", text },
-      { id: Date.now() + 1, role: "assistant", ...respond(text) },
-    ])
+    const userMessage = { id: Date.now(), role: "user", text }
+    const history = [...messages, userMessage]
+    setMessages((current) => [...current, userMessage])
+    setIsThinking(true)
+
+    try {
+      const data = await sendConciergeMessage({
+        message: text,
+        history: history.map((item) => ({ role: item.role, text: item.text })),
+      })
+      const lower = text.toLowerCase()
+      if (lower.includes("book") || lower.includes("appointment") || lower.includes("viewing") || lower.includes("visit")) {
+        setShowLeadForm(true)
+      }
+      setMessages((current) => [
+        ...current,
+        {
+          id: Date.now() + 1,
+          role: "assistant",
+          text: data.reply || respond(text).text,
+          actions: data.actions || (data.provider === "ollama" ? undefined : respond(text).actions),
+        },
+      ])
+    } catch {
+      setMessages((current) => [
+        ...current,
+        { id: Date.now() + 1, role: "assistant", ...respond(text) },
+      ])
+    } finally {
+      setIsThinking(false)
+    }
   }
 
   const submitLead = (lead) => {
@@ -417,6 +453,13 @@ export default function ConciergeChat() {
             {messages.map((message) => (
               <MessageBubble key={message.id} message={message} onAction={sendMessage} />
             ))}
+            {isThinking && (
+              <div className="flex justify-start">
+                <div className="rounded-sm border border-white/10 bg-white/[0.045] px-4 py-3 text-sm text-white/55">
+                  Concierge is thinking...
+                </div>
+              </div>
+            )}
             {showLeadForm && <LeadForm onSubmit={submitLead} />}
           </div>
 
@@ -446,12 +489,14 @@ export default function ConciergeChat() {
                 <input
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
+                  disabled={isThinking}
                   placeholder="Ask about cars, finance, trade..."
                   className="w-full bg-transparent text-sm text-white placeholder-white/25 outline-none"
                 />
               </div>
               <button
                 type="submit"
+                disabled={isThinking}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#C9A84C] text-black hover:bg-[#D4B86A] transition-colors"
                 aria-label="Send message"
               >
